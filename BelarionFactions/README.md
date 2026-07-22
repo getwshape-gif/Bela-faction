@@ -7,8 +7,10 @@ publique (`com.massivecraft.factions.*`), exactement comme le font Vault, Placeh
 
 ## Fonctionnalites
 
-1. **Nom de faction au-dessus du pseudo** — un tag flottant colore, affiche au-dessus du pseudo
-   habituel du joueur (qui n'est jamais modifie).
+1. **Nom de faction au-dessus du pseudo** — un tag flottant colore (`[NomFaction]`), affiche
+   au-dessus du pseudo habituel du joueur (qui n'est jamais modifie). Les crochets `[` `]` sont
+   toujours gris (`&8`, configurable via `bracket-color`) ; seul le nom de la faction a l'interieur
+   change de couleur.
 2. **Couleur selon la relation** — `&a` (vert) si le joueur qui regarde est dans la meme faction,
    `&c` (rouge) s'il est dans une faction ennemie. Necessite [ProtocolLib](https://www.spigotmc.org/resources/protocollib.1997/)
    pour envoyer une couleur differente a chaque joueur qui regarde.
@@ -21,6 +23,17 @@ publique (`com.massivecraft.factions.*`), exactement comme le font Vault, Placeh
 5. **Interface branchable** — `com.belarion.factions.points.FactionPointsProvider` +
    `BelarionPointsAPI.setProvider(...)` permettent a un futur plugin de points de remplacer la
    source de donnees par defaut sans toucher a ce plugin.
+6. **Badge + tag de faction dans le tchat** — quand un joueur d'une faction parle, le tchat affiche
+   en plus, juste devant le message deja existant : `Badge [NomFaction] ` + le format de tchat
+   habituel (grade, pseudo, message...). Le badge Top 3 (`①`/`②`/`③`) n'apparait que si la faction
+   du joueur est dans le Top 3, sinon rien n'est ajoute devant les crochets. Les crochets restent
+   gris et le nom de la faction est colore selon la relation, exactement comme au-dessus de la tete
+   (vert si meme faction que le lecteur, rouge si ennemie, etc. — chaque joueur voit donc une
+   couleur potentiellement differente pour le meme message). Le grade affiche en jeu (deja gere par
+   un autre mecanisme existant du serveur) n'est jamais touche ni recalcule par cette fonctionnalite
+   : elle se contente d'ajouter son prefixe devant le format de tchat deja en place. Desactivable
+   independamment du tag au-dessus de la tete via `chat-tag-enabled: false` dans
+   `plugins/BelarionFactionTags/config.yml`.
 
 Le blocage des sous-commandes `/f` deja configure (`commandes-bloquees` dans
 `plugins/BelarionFactions/config.yml`) est reconduit a l'identique.
