@@ -27,3 +27,13 @@ per-viewer-colors: true
 
 reload-message: '&aLes noms de factions ont ete recharges.'
 
+# Couleur des crochets "[" et "]" entourant le nom de faction (au-dessus de la tete ET dans le
+# tchat). Le nom de la faction garde sa propre couleur (selon la relation) ; seuls les crochets
+# utilisent cette couleur.
+bracket-color: '&8'
+
+# Si false : desactive uniquement l'ajout du badge Top 3 + tag de faction dans le tchat (le tag
+# au-dessus de la tete continue de fonctionner normalement). Ne touche jamais au grade/pseudo
+# deja affiches par ailleurs dans le tchat.
+chat-tag-enabled: true
+
