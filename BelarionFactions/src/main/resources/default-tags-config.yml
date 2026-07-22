@@ -34,8 +34,9 @@ bracket-color: '&8'
 
 # Si false : desactive uniquement l'ajout du badge Top 3 + tag de faction dans le tchat (le tag
 # au-dessus de la tete continue de fonctionner normalement). Ne touche jamais au grade/pseudo
-# deja affiches par ailleurs dans le tchat.
-chat-tag-enabled: true
+# deja affiches par ailleurs dans le tchat. Desactive par defaut ; activable via
+# /belariontags chattag on.
+chat-tag-enabled: false
 
 # Filtre de tchat SORTANT : retire certains textes indesirables des messages envoyes aux joueurs,
 # quelle que soit leur origine (SaberFactions, un autre plugin...). Ne modifie jamais aucun autre

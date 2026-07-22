@@ -11,6 +11,7 @@ import com.comphenix.protocol.events.PacketContainer;
 import com.comphenix.protocol.wrappers.WrappedDataWatcher;
 import org.bukkit.Location;
 import org.bukkit.entity.ArmorStand;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
@@ -29,12 +30,16 @@ import java.util.logging.Level;
  * la demande) :
  * <ul>
  *     <li>Deux ArmorStand invisibles sont attaches au joueur comme MONTURE ("passenger") plutot
- *     que re-teleportes manuellement a chaque tick : joueur -> support (porteur, sans nom,
+ *     que re-teleportes manuellement a chaque tick : joueur -> ... -> support (porteur, sans nom,
  *     donne juste la hauteur) -> tag (porte le nom de faction). Le client Minecraft synchronise
  *     alors nativement la position de toute la chaine avec celle du joueur, EXACTEMENT comme le
  *     pseudo lui-meme, sans le moindre decalage/tremblement visible (contrairement a l'ancienne
  *     methode qui re-teleportait l'entite toutes les {@code update-ticks} ticks et donnait
- *     l'impression d'un hologramme qui "flotte" independamment).</li>
+ *     l'impression d'un hologramme qui "flotte" independamment). IMPORTANT : on ne monte JAMAIS
+ *     notre chaine directement sur le joueur si un autre plugin (ex: hologramme grade+pseudo) a
+ *     deja pose sa propre monture dessus - on s'accroche toujours tout en haut de la chaine
+ *     existante (voir {@link #findMountPoint}), pour ne jamais evincer cet affichage existant et
+ *     pour que notre tag de faction apparaisse au-dessus de lui, jamais a sa place.</li>
  *     <li>La couleur du texte affiche depend de la relation entre celui qui REGARDE et celui qui
  *     est affiche : &a (own-color) si meme faction, &c (enemy-color) si faction ennemie. Comme
  *     Minecraft ne permet pas nativement d'afficher un texte different selon qui regarde, on
@@ -57,7 +62,8 @@ public final class FactionTagManager {
 
     // "tag" = l'armor stand visible qui porte le nom de faction (celle dont on envoie l'ID aux
     // paquets ProtocolLib). "base" = l'armor stand invisible et sans nom qui sert uniquement de
-    // support pour donner de la hauteur (le joueur porte "base", qui porte "tag").
+    // support pour donner de la hauteur ("base" porte "tag", et est elle-meme montee tout en haut
+    // de la chaine de montures du joueur - voir findMountPoint - pas forcement directement sur lui).
     private final Map<UUID, ArmorStand> armorStands = new HashMap<>();
     private final Map<UUID, ArmorStand> baseStands = new HashMap<>();
     private BukkitTask task;
@@ -185,10 +191,10 @@ public final class FactionTagManager {
     }
 
     /**
-     * Recree la chaine "joueur -> support -> tag" si besoin (premiere fois, monde change, ou une
-     * des deux entites a disparu), puis s'assure qu'elle est bien attachee comme monture avant de
-     * renvoyer l'armor stand visible (celle qui porte le nom). Attacher les armor stands comme
-     * "passenger" plutot que les teleporter a chaque tick est ce qui rend le tag parfaitement
+     * Recree la chaine "support -> tag" si besoin (premiere fois, monde change, ou une des deux
+     * entites a disparu), puis s'assure qu'elle est bien attachee comme monture - au bon endroit -
+     * avant de renvoyer l'armor stand visible (celle qui porte le nom). Attacher les armor stands
+     * comme "passenger" plutot que les teleporter a chaque tick est ce qui rend le tag parfaitement
      * stable : le client suit alors la position du joueur nativement, comme pour son pseudo.
      */
     private ArmorStand getOrCreateStand(Player target) {
@@ -204,9 +210,9 @@ public final class FactionTagManager {
 
             Location spawnLocation = target.getLocation();
 
-            // Support invisible et sans nom : sa seule utilite est sa hauteur normale (pas
-            // "small"), ce qui place le tag qu'il porte au-dessus du pseudo du joueur plutot que
-            // colle dessus.
+            // Support invisible et sans nom : sa seule utilite est de donner un peu de hauteur
+            // supplementaire, ce qui place le tag qu'il porte au-dessus de ce sur quoi il est monte
+            // plutot que colle dessus.
             base = (ArmorStand) target.getWorld().spawnEntity(spawnLocation, EntityType.ARMOR_STAND);
             configureCarrierStand(base, false);
 
@@ -218,14 +224,36 @@ public final class FactionTagManager {
             armorStands.put(id, tag);
         }
 
-        if (!base.equals(target.getPassenger())) {
-            target.setPassenger(base);
+        // On ne monte JAMAIS directement sur le joueur sans verifier d'abord si une monture existe
+        // deja (typiquement un hologramme grade+pseudo d'un autre plugin) : on s'accroche au sommet
+        // de la chaine actuelle pour ne rien evincer, et pour apparaitre au-dessus de cet affichage.
+        Entity mountPoint = findMountPoint(target, base);
+        if (!base.equals(mountPoint.getPassenger())) {
+            mountPoint.setPassenger(base);
         }
         if (!tag.equals(base.getPassenger())) {
             base.setPassenger(tag);
         }
 
         return tag;
+    }
+
+    /**
+     * Remonte la chaine de montures en partant du joueur (joueur -> passager -> passager du
+     * passager -> ...) et s'arrete des qu'elle trouve soit notre propre "base" (on est deja
+     * correctement accroches, rien a faire), soit le tout dernier maillon (rien de plus par-dessus :
+     * c'est ici qu'il faut accrocher notre "base"). Ca garantit qu'on ne remplace jamais la monture
+     * d'un autre plugin (ex: un hologramme affichant grade+pseudo au-dessus de la tete) : notre tag
+     * de faction vient toujours se poser par-dessus, jamais a sa place.
+     */
+    private Entity findMountPoint(Player target, ArmorStand ourBase) {
+        Entity current = target;
+        Entity passenger = current.getPassenger();
+        while (passenger != null && !passenger.equals(ourBase)) {
+            current = passenger;
+            passenger = current.getPassenger();
+        }
+        return current;
     }
 
     private void configureCarrierStand(ArmorStand stand, boolean small) {

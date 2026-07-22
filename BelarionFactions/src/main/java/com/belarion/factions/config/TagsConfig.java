@@ -59,7 +59,10 @@ public final class TagsConfig {
             changed = true;
         }
         if (!config.isSet("chat-tag-enabled")) {
-            config.set("chat-tag-enabled", true);
+            // Desactive par defaut : demande explicite de l'utilisateur de ne pas afficher le tag
+            // de faction devant son pseudo dans le tchat (ex: "[bm]"). Reste activable via
+            // /belariontags chattag on ou en editant cette cle directement.
+            config.set("chat-tag-enabled", false);
             changed = true;
         }
         if (!config.isSet("chat-filter.enabled")) {
@@ -139,10 +142,25 @@ public final class TagsConfig {
 
     /**
      * Si false, desactive uniquement l'ajout du badge + tag de faction dans le tchat (le nametag
-     * au-dessus de la tete continue de fonctionner normalement).
+     * au-dessus de la tete continue de fonctionner normalement). Desactive par defaut (voir
+     * {@link #reload()}).
      */
     public boolean isChatTagEnabled() {
-        return config.getBoolean("chat-tag-enabled", true);
+        return config.getBoolean("chat-tag-enabled", false);
+    }
+
+    /**
+     * Active/desactive a chaud l'ajout du badge + tag de faction dans le tchat, et sauvegarde
+     * immediatement sur disque - utilisable depuis {@code /belariontags chattag <on|off>} pour
+     * changer ce reglage sans avoir besoin d'un acces au systeme de fichiers du serveur.
+     */
+    public void setChatTagEnabled(boolean enabled) {
+        config.set("chat-tag-enabled", enabled);
+        try {
+            config.save(file);
+        } catch (IOException e) {
+            plugin.getLogger().log(Level.SEVERE, "Impossible de sauvegarder " + file.getPath(), e);
+        }
     }
 
     /**
