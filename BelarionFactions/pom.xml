@@ -19,12 +19,13 @@
     </description>
 
     <properties>
-        <!-- ProtocolLib 5.4.0 est compile en class-file version 61 (Java 17) : un JDK 8 ne peut
-             meme pas LIRE ce .jar en dependance "provided", meme sans le reempaqueter. Le serveur
-             doit donc tourner sous Java 17+ pour charger ProtocolLib 5.4.0 (exigence de ProtocolLib
-             lui-meme, pas de ce plugin) ; on aligne donc la compilation sur Java 17. -->
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
+        <!-- Le serveur cible est un vrai Spigot 1.8.8 sous Java 8 : on utilise donc ProtocolLib
+             5.1.0 (derniere version encore compilee pour Java 8, cf. commentaire sur sa dependance
+             plus bas), et on compile ce plugin en Java 8 pour rester compatible. Les versions plus
+             recentes de ProtocolLib (5.3.0+) exigent Java 17 et le mainteneur lui-meme a confirme
+             des soucis specifiques sur Spigot 1.8.8 avec 5.3.0. -->
+        <maven.compiler.source>8</maven.compiler.source>
+        <maven.compiler.target>8</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
@@ -53,12 +54,17 @@
             <scope>provided</scope>
         </dependency>
 
-        <!-- ProtocolLib 5.4.0 (Maven Central, groupId net.dmulloy2) : ce build unique couvre
-             officiellement Minecraft 1.8 a 1.21.8, donc compatible avec ce serveur 1.8.8. -->
+        <!-- ProtocolLib 5.1.0 (Maven Central, groupId net.dmulloy2) : derniere version publiee
+             encore compilee pour Java 8 (sourceCompatibility/targetCompatibility = VERSION_1_8 dans
+             son propre build.gradle a ce tag), et elle liste explicitement Paper/Spigot 1.8 parmi
+             ses versions supportees. Les versions 5.3.0/5.4.0 exigent Java 17 (bump annonce dans les
+             notes de version 5.4.0) et le mainteneur de ProtocolLib a confirme des problemes
+             specifiques a Spigot 1.8.8 avec 5.3.0 (issue GitHub dmulloy2/ProtocolLib#3528) : on evite
+             donc volontairement ces versions plus recentes pour ce serveur. -->
         <dependency>
             <groupId>net.dmulloy2</groupId>
             <artifactId>ProtocolLib</artifactId>
-            <version>5.4.0</version>
+            <version>5.1.0</version>
             <scope>provided</scope>
         </dependency>
 
@@ -80,14 +86,23 @@
 
     <build>
         <finalName>${project.name}</finalName>
+        <!-- Active le filtrage Maven sur les resources (plugin.yml, default-*-config.yml) pour que
+             ${project.version} dans plugin.yml soit bien remplace par la vraie version (1.0.0) au
+             lieu d'apparaitre tel quel dans le plugin.yml final. -->
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.11.0</version>
                 <configuration>
-                    <source>17</source>
-                    <target>17</target>
+                    <source>8</source>
+                    <target>8</target>
                 </configuration>
             </plugin>
             <plugin>

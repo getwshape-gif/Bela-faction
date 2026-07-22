@@ -55,19 +55,22 @@ Aucune donnee existante n'est perdue ni reinitialisee a l'installation.
 
 ## Installation
 
-**Prerequis important : Java 17 ou plus recent sur le serveur.** La derniere version de
-ProtocolLib (5.4.0, seule version encore publiee et maintenue par son auteur) est distribuee en
-class-file Java 17, meme si elle continue de supporter le protocole Minecraft 1.8 a 1.21.8. Un
-serveur qui tourne encore sous Java 8 doit d'abord etre mis a jour vers Java 17+ (le noyau Spigot
-1.8.8 lui-meme fonctionne normalement sous Java 17). Sans cela, ProtocolLib 5.4.0 refusera de se
-charger.
+**Java 8 suffit** (compatible avec un vrai Spigot/CraftBukkit 1.8.8). Ce plugin utilise
+ProtocolLib **5.1.0** et pas une version plus recente : les versions 5.3.0/5.4.0 exigent Java 17
+(bump annonce dans les notes de version de 5.4.0) et le mainteneur de ProtocolLib a lui-meme
+confirme des problemes specifiques a Spigot 1.8.8 avec la 5.3.0. La 5.1.0 est la derniere version
+encore compilee pour Java 8 et elle liste explicitement 1.8 parmi ses versions supportees — c'est
+donc le bon choix pour ce serveur, pas la derniere version en date.
 
-1. Installer la derniere version de [ProtocolLib](https://www.spigotmc.org/resources/protocollib.1997/)
-   (5.4.0) dans `plugins/` (obligatoire).
+1. Installer **ProtocolLib 5.1.0** (pas une version plus recente) dans `plugins/` : telechargeable
+   depuis [Maven Central](https://repo1.maven.org/maven2/net/dmulloy2/ProtocolLib/5.1.0/ProtocolLib-5.1.0.jar)
+   ou depuis les [releases GitHub de ProtocolLib](https://github.com/dmulloy2/ProtocolLib/releases/tag/5.1.0).
 2. Recuperer `BelarionFactions.jar` compile automatiquement par GitHub Actions : onglet **Actions**
-   du depot -> dernier run -> **Artifacts** -> `BelarionFactions-jar`.
+   du depot -> dernier run -> **Artifacts** -> `BelarionFactions-jar`. Attention, GitHub telecharge
+   toujours un `.zip` autour du jar : il faut l'extraire et prendre le `.jar` a l'interieur, pas le
+   `.zip` tel quel.
 3. Placer le `.jar` dans `plugins/` a cote de `SaberFactions.jar` et `ProtocolLib.jar`.
-4. Redemarrer le serveur (sous Java 17+).
+4. Redemarrer le serveur.
 
 ## Compiler soi-meme
 

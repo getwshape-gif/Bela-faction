@@ -1,7 +1,6 @@
 name: BelarionFactions
 main: com.belarion.factions.BelarionFactionsPlugin
 version: '${project.version}'
-api-version: '1.13'
 author: Belarion
 description: >
   Add-on pour SaberFactions : nametags de faction colores selon la relation,
@@ -38,4 +37,3 @@ permissions:
   belarion.tags.admin:
     description: Recharger la configuration des nametags de faction.
     default: op
-
