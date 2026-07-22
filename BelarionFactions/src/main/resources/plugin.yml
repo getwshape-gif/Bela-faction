@@ -23,8 +23,8 @@ commands:
     usage: /<command> <add|remove|set> <faction> <montant>
     permission: belarion.points.admin
   belariontags:
-    description: Recharge la configuration des nametags de faction.
-    usage: /<command> reload
+    description: Recharge la configuration des nametags de faction, ou active/desactive le tag dans le tchat.
+    usage: /<command> reload | /<command> chattag <on|off>
     permission: belarion.tags.admin
 
 permissions:
