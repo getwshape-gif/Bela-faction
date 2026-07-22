@@ -47,6 +47,5 @@ top3:
   color-top2: '&5'
   color-top3: '&6'
   header: '&8&m----------&8[ &6Top 3 Factions &8]&8&m----------'
-  footer: '&8&m---------------------------------------------------
+  footer: '&8&m---------------------------------------------------'
   no-data: '&7Aucune faction classee pour le moment.'
-
