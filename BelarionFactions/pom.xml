@@ -30,6 +30,12 @@
             <id>spigot-repo</id>
             <url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
         </repository>
+        <!-- Miroir public hebergeant net.md-5:bungeecord-chat:1.8-SNAPSHOT (dependance transitive de
+             spigot-api, introuvable sur hub.spigotmc.org pour cette vieille version 1.8). -->
+        <repository>
+            <id>elmakers-repo</id>
+            <url>https://maven.elmakers.com/repository/</url>
+        </repository>
         <!-- ProtocolLib : necessaire pour envoyer une couleur de nametag differente par joueur qui regarde -->
         <repository>
             <id>dmulloy2-repo</id>
@@ -45,10 +51,12 @@
             <scope>provided</scope>
         </dependency>
 
+        <!-- Version 4.7.0 : derniere version documentee comme resolvable sur le depot public
+             dmulloy2, compatible avec l'API 1.8 (WrappedDataWatcher a index numerique). -->
         <dependency>
             <groupId>com.comphenix.protocol</groupId>
             <artifactId>ProtocolLib</artifactId>
-            <version>4.8.0</version>
+            <version>4.7.0</version>
             <scope>provided</scope>
         </dependency>
 
@@ -88,4 +96,3 @@
         </plugins>
     </build>
 </project>
-
