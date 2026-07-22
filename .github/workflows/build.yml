@@ -13,11 +13,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up JDK 8
+      - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '8'
+          java-version: '17'
           cache: maven
 
       - name: Extraire SaberFactions.jar (necessaire pour compiler contre son API publique)
@@ -35,4 +35,3 @@ jobs:
           name: BelarionFactions-jar
           path: BelarionFactions/target/BelarionFactions.jar
           if-no-files-found: error
-
