@@ -9,6 +9,8 @@ import org.bukkit.command.CommandSender;
 
 /**
  * /belariontags reload : recharge plugins/BelarionFactionTags/config.yml a chaud.
+ * /belariontags chattag <on|off> : active/desactive a chaud le tag de faction dans le tchat (ex:
+ * "[bm]" devant le pseudo), sans avoir besoin d'un acces au systeme de fichiers du serveur.
  */
 public final class TagsAdminCommand implements CommandExecutor {
 
@@ -27,14 +29,25 @@ public final class TagsAdminCommand implements CommandExecutor {
             return true;
         }
 
-        if (args.length != 1 || !args[0].equalsIgnoreCase("reload")) {
-            sender.sendMessage(ColorUtil.colorize("&eUtilisation : &f/belariontags reload"));
+        if (args.length == 1 && args[0].equalsIgnoreCase("reload")) {
+            config.reload();
+            tagManager.start();
+            sender.sendMessage(ColorUtil.colorize(config.getReloadMessage()));
             return true;
         }
 
-        config.reload();
-        tagManager.start();
-        sender.sendMessage(ColorUtil.colorize(config.getReloadMessage()));
+        if (args.length == 2 && args[0].equalsIgnoreCase("chattag")
+                && (args[1].equalsIgnoreCase("on") || args[1].equalsIgnoreCase("off"))) {
+            boolean enabled = args[1].equalsIgnoreCase("on");
+            config.setChatTagEnabled(enabled);
+            sender.sendMessage(ColorUtil.colorize(enabled
+                    ? "&aLe tag de faction dans le tchat est maintenant &lactive&r&a."
+                    : "&aLe tag de faction dans le tchat est maintenant &ldesactive&r&a."));
+            return true;
+        }
+
+        sender.sendMessage(ColorUtil.colorize(
+                "&eUtilisation : &f/belariontags reload &7ou &f/belariontags chattag <on|off>"));
         return true;
     }
 }
