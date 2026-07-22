@@ -1,0 +1,29 @@
+# Configuration de l'affichage du nom de faction au-dessus du pseudo des joueurs.
+# Ce fichier est cree uniquement s'il n'existe pas deja (votre config existante n'est jamais ecrasee).
+
+# Distance (en blocs) au-dela de laquelle un joueur n'est plus mis a jour / affiche pour un autre.
+distance: 48
+
+# Frequence de mise a jour de la position/couleur du tag, en ticks (20 ticks = 1 seconde).
+update-ticks: 5
+
+# Hauteur du tag de faction au-dessus de la tete du joueur (au-dessus du pseudo).
+height-offset: 2.65
+
+# Couleur du nom de faction quand le joueur qui regarde est dans la MEME faction.
+own-color: '&a'
+
+# Couleur du nom de faction quand le joueur qui regarde est dans une faction ENNEMIE.
+enemy-color: '&c'
+
+# Couleurs pour les autres relations (non demandees explicitement, valeur neutre par defaut).
+ally-color: '&f'
+truce-color: '&f'
+neutral-color: '&f'
+
+# Si false : desactive la couleur differente par joueur (necessite ProtocolLib) et affiche
+# toujours own-color pour tout le monde. A utiliser uniquement en depannage.
+per-viewer-colors: true
+
+reload-message: '&aLes noms de factions ont ete recharges.'
+
