@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.belarion</groupId>
+    <artifactId>BelarionFactions</artifactId>
+    <version>1.0.0</version>
+    <packaging>jar</packaging>
+
+    <name>BelarionFactions</name>
+    <description>
+        Plugin compagnon pour SaberFactions (Belarion) : affichage du nom de faction
+        au-dessus du pseudo des joueurs (colore selon la relation), preparation d'un
+        classement Top 3 des factions (branchable sur un futur systeme de points),
+        et reconduction du blocage de sous-commandes /f deja configure.
+        Ne modifie jamais SaberFactions.jar : utilise uniquement son API publique.
+    </description>
+
+    <properties>
+        <!-- ProtocolLib 5.4.0 est compile en class-file version 61 (Java 17) : un JDK 8 ne peut
+             meme pas LIRE ce .jar en dependance "provided", meme sans le reempaqueter. Le serveur
+             doit donc tourner sous Java 17+ pour charger ProtocolLib 5.4.0 (exigence de ProtocolLib
+             lui-meme, pas de ce plugin) ; on aligne donc la compilation sur Java 17. -->
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
+    <repositories>
+        <!-- API serveur Spigot/Bukkit -->
+        <repository>
+            <id>spigot-repo</id>
+            <url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
+        </repository>
+        <!-- Miroir public hebergeant net.md-5:bungeecord-chat:1.8-SNAPSHOT (dependance transitive de
+             spigot-api, introuvable sur hub.spigotmc.org pour cette vieille version 1.8). -->
+        <repository>
+            <id>elmakers-repo</id>
+            <url>https://maven.elmakers.com/repository/</url>
+        </repository>
+        <!-- ProtocolLib est maintenant publie sur Maven Central (groupId net.dmulloy2) : l'ancien
+             depot repo.dmulloy2.net (com.comphenix.protocol) est officiellement deprecie par le
+             mainteneur, aucun repository supplementaire n'est donc necessaire ici. -->
+    </repositories>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.spigotmc</groupId>
+            <artifactId>spigot-api</artifactId>
+            <version>1.8.8-R0.1-SNAPSHOT</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- ProtocolLib 5.4.0 (Maven Central, groupId net.dmulloy2) : ce build unique couvre
+             officiellement Minecraft 1.8 a 1.21.8, donc compatible avec ce serveur 1.8.8. -->
+        <dependency>
+            <groupId>net.dmulloy2</groupId>
+            <artifactId>ProtocolLib</artifactId>
+            <version>5.4.0</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!--
+            SaberFactions.jar n'est pas publie sur un depot Maven public (plugin premium).
+            On le reference en scope "system" a partir du jar fourni dans /libs, uniquement
+            pour compiler contre son API publique (com.massivecraft.factions.*).
+            Le jar de SaberFactions n'est JAMAIS modifie, reempaquete ni redistribue par ce build :
+            a l'execution, c'est le SaberFactions.jar deja installe sur le serveur qui est utilise.
+        -->
+        <dependency>
+            <groupId>com.massivecraft</groupId>
+            <artifactId>factions</artifactId>
+            <version>1.6.9.5-4.1.9</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/libs/SaberFactions.jar</systemPath>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <finalName>${project.name}</finalName>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.11.0</version>
+                <configuration>
+                    <source>17</source>
+                    <target>17</target>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>3.3.1</version>
+            </plugin>
+        </plugins>
+    </build>
+</project>
