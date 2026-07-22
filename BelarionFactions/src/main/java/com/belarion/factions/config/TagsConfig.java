@@ -47,6 +47,25 @@ public final class TagsConfig {
             }
         }
         this.config = YamlConfiguration.loadConfiguration(file);
+
+        // Ajoute les nouvelles cles si elles manquent (ex: config existante d'avant l'ajout de ces
+        // options), sans jamais ecraser une valeur deja presente.
+        boolean changed = false;
+        if (!config.isSet("bracket-color")) {
+            config.set("bracket-color", "&8");
+            changed = true;
+        }
+        if (!config.isSet("chat-tag-enabled")) {
+            config.set("chat-tag-enabled", true);
+            changed = true;
+        }
+        if (changed) {
+            try {
+                config.save(file);
+            } catch (IOException e) {
+                plugin.getLogger().log(Level.SEVERE, "Impossible de sauvegarder " + file.getPath(), e);
+            }
+        }
     }
 
     public int getDistance() {
@@ -92,6 +111,23 @@ public final class TagsConfig {
 
     public String getReloadMessage() {
         return config.getString("reload-message", "&aLes noms de factions ont ete recharges.");
+    }
+
+    /**
+     * Couleur des crochets "[" et "]" entourant le nom de faction (au-dessus de la tete ET dans
+     * le tchat). Le nom de la faction lui-meme garde sa propre couleur (selon la relation) ;
+     * seuls les crochets utilisent cette couleur.
+     */
+    public String getBracketColor() {
+        return config.getString("bracket-color", "&8");
+    }
+
+    /**
+     * Si false, desactive uniquement l'ajout du badge + tag de faction dans le tchat (le nametag
+     * au-dessus de la tete continue de fonctionner normalement).
+     */
+    public boolean isChatTagEnabled() {
+        return config.getBoolean("chat-tag-enabled", true);
     }
 }
 
