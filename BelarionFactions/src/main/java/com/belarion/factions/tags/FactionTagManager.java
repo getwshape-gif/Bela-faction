@@ -18,7 +18,6 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -224,10 +223,11 @@ public final class FactionTagManager {
             packet.getWatchableCollectionModifier().write(0, watcher.getWatchableObjects());
 
             protocolManager.sendServerPacket(viewer, packet);
-        } catch (InvocationTargetException e) {
+        } catch (RuntimeException e) {
+            // ProtocolLib recent (5.x) ne declare plus d'exception verifiee ici, mais peut
+            // toujours lever une exception non verifiee (joueur deconnecte entre-temps, etc.).
             plugin.getLogger().log(Level.WARNING, "Impossible d'envoyer le paquet de nametag a "
                     + viewer.getName(), e);
         }
     }
 }
-
