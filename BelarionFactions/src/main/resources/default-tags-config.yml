@@ -37,3 +37,19 @@ bracket-color: '&8'
 # deja affiches par ailleurs dans le tchat.
 chat-tag-enabled: true
 
+# Filtre de tchat SORTANT : retire certains textes indesirables des messages envoyes aux joueurs,
+# quelle que soit leur origine (SaberFactions, un autre plugin...). Ne modifie jamais aucun autre
+# plugin : on filtre uniquement le paquet reseau juste avant qu'il n'atteigne le client (comme
+# pour la couleur des noms de faction ci-dessus).
+chat-filter:
+  enabled: true
+  # Toute ligne de tchat contenant une de ces chaines (recherche insensible a la casse) n'est
+  # jamais envoyee au joueur : utile pour supprimer un message entier.
+  drop-if-contains:
+    - '/setpaypal'
+  # Ces chaines sont retirees du texte des lignes qui les contiennent, en gardant le reste de la
+  # ligne : utile pour un texte au milieu d'une ligne plus longue (ex: un placeholder de stats).
+  strip-substrings:
+    - '(faction-kill)'
+    - '(faction-death)'
+
