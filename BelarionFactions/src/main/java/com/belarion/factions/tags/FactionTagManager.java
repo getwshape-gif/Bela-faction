@@ -18,7 +18,9 @@ import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.logging.Level;
 
@@ -26,12 +28,17 @@ import java.util.logging.Level;
  * Gere l'affichage du nom de faction au-dessus du pseudo des joueurs (fonctionnalites 1 et 2 de
  * la demande) :
  * <ul>
- *     <li>Un ArmorStand invisible (marqueur) est maintenu au-dessus de chaque joueur en ligne,
- *     un peu plus haut que son pseudo habituel (qui, lui, n'est jamais touche).</li>
+ *     <li>Deux ArmorStand invisibles sont attaches au joueur comme MONTURE ("passenger") plutot
+ *     que re-teleportes manuellement a chaque tick : joueur -> support (porteur, sans nom,
+ *     donne juste la hauteur) -> tag (porte le nom de faction). Le client Minecraft synchronise
+ *     alors nativement la position de toute la chaine avec celle du joueur, EXACTEMENT comme le
+ *     pseudo lui-meme, sans le moindre decalage/tremblement visible (contrairement a l'ancienne
+ *     methode qui re-teleportait l'entite toutes les {@code update-ticks} ticks et donnait
+ *     l'impression d'un hologramme qui "flotte" independamment).</li>
  *     <li>La couleur du texte affiche depend de la relation entre celui qui REGARDE et celui qui
  *     est affiche : &a (own-color) si meme faction, &c (enemy-color) si faction ennemie. Comme
  *     Minecraft ne permet pas nativement d'afficher un texte different selon qui regarde, on
- *     utilise ProtocolLib pour envoyer, a chaque joueur, un paquet de metadonnees personnalise
+ *     utilise ProtocolLib pour envoyer, a chaque joueur, un paquet de metadonnees personalise
  *     pour cette entite (le texte au-dessus de la tete reste identique pour tout le monde en
  *     apparence globale, mais sa couleur differe reellement d'un joueur a l'autre).</li>
  * </ul>
@@ -48,7 +55,11 @@ public final class FactionTagManager {
     private final TagsConfig config;
     private final ProtocolManager protocolManager;
 
+    // "tag" = l'armor stand visible qui porte le nom de faction (celle dont on envoie l'ID aux
+    // paquets ProtocolLib). "base" = l'armor stand invisible et sans nom qui sert uniquement de
+    // support pour donner de la hauteur (le joueur porte "base", qui porte "tag").
     private final Map<UUID, ArmorStand> armorStands = new HashMap<>();
+    private final Map<UUID, ArmorStand> baseStands = new HashMap<>();
     private BukkitTask task;
 
     public FactionTagManager(Plugin plugin, TagsConfig config) {
@@ -87,12 +98,22 @@ public final class FactionTagManager {
             }
         }
         armorStands.clear();
+        for (ArmorStand stand : baseStands.values()) {
+            if (stand != null && !stand.isDead()) {
+                stand.remove();
+            }
+        }
+        baseStands.clear();
     }
 
     public void removeTag(UUID playerId) {
-        ArmorStand stand = armorStands.remove(playerId);
-        if (stand != null && !stand.isDead()) {
-            stand.remove();
+        ArmorStand tagStand = armorStands.remove(playerId);
+        if (tagStand != null && !tagStand.isDead()) {
+            tagStand.remove();
+        }
+        ArmorStand baseStand = baseStands.remove(playerId);
+        if (baseStand != null && !baseStand.isDead()) {
+            baseStand.remove();
         }
     }
 
@@ -102,7 +123,14 @@ public final class FactionTagManager {
         }
         // Nettoyage des armor stands orphelines (joueur deconnecte entre deux ticks sans passer
         // par PlayerQuitEvent, ex: crash serveur / kick tres precoce).
-        armorStands.keySet().removeIf(uuid -> plugin.getServer().getPlayer(uuid) == null);
+        Set<UUID> orphans = new HashSet<>();
+        orphans.addAll(armorStands.keySet());
+        orphans.addAll(baseStands.keySet());
+        for (UUID uuid : orphans) {
+            if (plugin.getServer().getPlayer(uuid) == null) {
+                removeTag(uuid);
+            }
+        }
     }
 
     private void updateTargetTag(Player target) {
@@ -112,7 +140,6 @@ public final class FactionTagManager {
         if (stand == null) {
             return;
         }
-        stand.teleport(computeTagLocation(target));
 
         if (factionTag == null) {
             // Pas de faction (ou wilderness) : rien a afficher au-dessus de la tete.
@@ -157,40 +184,61 @@ public final class FactionTagManager {
         return FactionDisplayUtil.buildBracketedTag(config.getBracketColor(), nameColor, factionTag);
     }
 
+    /**
+     * Recree la chaine "joueur -> support -> tag" si besoin (premiere fois, monde change, ou une
+     * des deux entites a disparu), puis s'assure qu'elle est bien attachee comme monture avant de
+     * renvoyer l'armor stand visible (celle qui porte le nom). Attacher les armor stands comme
+     * "passenger" plutot que les teleporter a chaque tick est ce qui rend le tag parfaitement
+     * stable : le client suit alors la position du joueur nativement, comme pour son pseudo.
+     */
     private ArmorStand getOrCreateStand(Player target) {
-        ArmorStand stand = armorStands.get(target.getUniqueId());
-        if (stand != null && !stand.isDead() && stand.getWorld().equals(target.getWorld())) {
-            return stand;
-        }
-        if (stand != null) {
-            // Monde different ou entite invalide : on la recree proprement.
-            if (!stand.isDead()) {
-                stand.remove();
-            }
-            armorStands.remove(target.getUniqueId());
+        UUID id = target.getUniqueId();
+        ArmorStand base = baseStands.get(id);
+        ArmorStand tag = armorStands.get(id);
+
+        boolean invalid = base == null || tag == null || base.isDead() || tag.isDead()
+                || !base.getWorld().equals(target.getWorld());
+
+        if (invalid) {
+            removeTag(id);
+
+            Location spawnLocation = target.getLocation();
+
+            // Support invisible et sans nom : sa seule utilite est sa hauteur normale (pas
+            // "small"), ce qui place le tag qu'il porte au-dessus du pseudo du joueur plutot que
+            // colle dessus.
+            base = (ArmorStand) target.getWorld().spawnEntity(spawnLocation, EntityType.ARMOR_STAND);
+            configureCarrierStand(base, false);
+
+            // Armor stand qui porte reellement le nom de faction affiche.
+            tag = (ArmorStand) target.getWorld().spawnEntity(spawnLocation, EntityType.ARMOR_STAND);
+            configureCarrierStand(tag, true);
+
+            baseStands.put(id, base);
+            armorStands.put(id, tag);
         }
 
-        Location location = computeTagLocation(target);
-        ArmorStand created = (ArmorStand) target.getWorld().spawnEntity(location, EntityType.ARMOR_STAND);
-        created.setVisible(false);
-        created.setSmall(true);
-        created.setArms(false);
-        created.setBasePlate(false);
-        created.setCustomNameVisible(false);
-        created.setCanPickupItems(false);
-        created.setRemoveWhenFarAway(false);
-        ReflectionCompat.trySetGravity(created, false);
-        ReflectionCompat.trySetMarker(created, true);
-        ReflectionCompat.trySetAI(created, false);
+        if (!base.equals(target.getPassenger())) {
+            target.setPassenger(base);
+        }
+        if (!tag.equals(base.getPassenger())) {
+            base.setPassenger(tag);
+        }
 
-        armorStands.put(target.getUniqueId(), created);
-        return created;
+        return tag;
     }
 
-    private Location computeTagLocation(Player target) {
-        Location location = target.getLocation().clone();
-        location.setY(location.getY() + config.getHeightOffset());
-        return location;
+    private void configureCarrierStand(ArmorStand stand, boolean small) {
+        stand.setVisible(false);
+        stand.setSmall(small);
+        stand.setArms(false);
+        stand.setBasePlate(false);
+        stand.setCustomNameVisible(false);
+        stand.setCanPickupItems(false);
+        stand.setRemoveWhenFarAway(false);
+        ReflectionCompat.trySetGravity(stand, false);
+        ReflectionCompat.trySetMarker(stand, true);
+        ReflectionCompat.trySetAI(stand, false);
     }
 
     private void sendPersonalizedName(Player viewer, int entityId, String coloredName) {
