@@ -42,11 +42,19 @@ Aucune donnee existante n'est perdue ni reinitialisee a l'installation.
 
 ## Installation
 
-1. Installer [ProtocolLib](https://www.spigotmc.org/resources/protocollib.1997/) dans `plugins/` (obligatoire).
+**Prerequis important : Java 17 ou plus recent sur le serveur.** La derniere version de
+ProtocolLib (5.4.0, seule version encore publiee et maintenue par son auteur) est distribuee en
+class-file Java 17, meme si elle continue de supporter le protocole Minecraft 1.8 a 1.21.8. Un
+serveur qui tourne encore sous Java 8 doit d'abord etre mis a jour vers Java 17+ (le noyau Spigot
+1.8.8 lui-meme fonctionne normalement sous Java 17). Sans cela, ProtocolLib 5.4.0 refusera de se
+charger.
+
+1. Installer la derniere version de [ProtocolLib](https://www.spigotmc.org/resources/protocollib.1997/)
+   (5.4.0) dans `plugins/` (obligatoire).
 2. Recuperer `BelarionFactions.jar` compile automatiquement par GitHub Actions : onglet **Actions**
    du depot -> dernier run -> **Artifacts** -> `BelarionFactions-jar`.
 3. Placer le `.jar` dans `plugins/` a cote de `SaberFactions.jar` et `ProtocolLib.jar`.
-4. Redemarrer le serveur.
+4. Redemarrer le serveur (sous Java 17+).
 
 ## Compiler soi-meme
 
@@ -64,4 +72,3 @@ mvn clean package
 | `/topfactions` (alias `/ftop`, `/topf`) | Affiche le Top 3 des factions | `belarion.topfactions` (defaut: tous) |
 | `/fpoints <add\|remove\|set> <faction> <montant>` | Administration manuelle des points | `belarion.points.admin` (defaut: op) |
 | `/belariontags reload` | Recharge la config des nametags | `belarion.tags.admin` (defaut: op) |
-
