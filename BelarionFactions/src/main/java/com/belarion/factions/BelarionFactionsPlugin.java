@@ -5,12 +5,15 @@ import com.belarion.factions.command.TagsAdminCommand;
 import com.belarion.factions.command.TopFactionsCommand;
 import com.belarion.factions.config.MainConfig;
 import com.belarion.factions.config.TagsConfig;
+import com.belarion.factions.filter.OutgoingChatFilter;
 import com.belarion.factions.listener.BlockedCommandListener;
 import com.belarion.factions.listener.FactionChatListener;
 import com.belarion.factions.listener.PlayerConnectionListener;
 import com.belarion.factions.points.BelarionPointsAPI;
 import com.belarion.factions.points.YamlFactionPointsProvider;
 import com.belarion.factions.tags.FactionTagManager;
+import com.comphenix.protocol.ProtocolLibrary;
+import com.comphenix.protocol.ProtocolManager;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -39,6 +42,7 @@ public final class BelarionFactionsPlugin extends JavaPlugin {
     private TagsConfig tagsConfig;
     private FactionTagManager tagManager;
     private YamlFactionPointsProvider pointsProvider;
+    private OutgoingChatFilter chatFilter;
 
     @Override
     public void onEnable() {
@@ -69,18 +73,28 @@ public final class BelarionFactionsPlugin extends JavaPlugin {
         pluginManager.registerEvents(new BlockedCommandListener(mainConfig), this);
         pluginManager.registerEvents(new FactionChatListener(mainConfig, tagsConfig), this);
 
+        // Filtre de tchat sortant (retire "/setpaypal" et "(faction-kill)"/"(faction-death)" du
+        // texte envoye aux joueurs, ex: dans /f show) : ne touche jamais a SaberFactions.jar, on
+        // n'intercepte que le paquet reseau final via ProtocolLib. Voir OutgoingChatFilter.
+        this.chatFilter = new OutgoingChatFilter(this, tagsConfig);
+        ProtocolManager protocolManager = ProtocolLibrary.getProtocolManager();
+        protocolManager.addPacketListener(chatFilter);
+
         getCommand("topfactions").setExecutor(new TopFactionsCommand(mainConfig));
         getCommand("fpoints").setExecutor(new FPointsCommand(mainConfig));
         getCommand("belariontags").setExecutor(new TagsAdminCommand(tagsConfig, tagManager));
 
-        getLogger().info("BelarionFactions active : nametags de faction, Top 3, et compatibilite "
-                + "avec plugins/BelarionFactions + plugins/BelarionFactionTags existants.");
+        getLogger().info("BelarionFactions active : nametags de faction, Top 3, filtre de tchat, et "
+                + "compatibilite avec plugins/BelarionFactions + plugins/BelarionFactionTags existants.");
     }
 
     @Override
     public void onDisable() {
         if (tagManager != null) {
             tagManager.shutdown();
+        }
+        if (chatFilter != null) {
+            ProtocolLibrary.getProtocolManager().removePacketListener(chatFilter);
         }
     }
 }

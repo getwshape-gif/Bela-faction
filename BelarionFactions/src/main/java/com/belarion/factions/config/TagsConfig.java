@@ -6,6 +6,9 @@ import org.bukkit.plugin.Plugin;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.logging.Level;
 
 /**
@@ -57,6 +60,18 @@ public final class TagsConfig {
         }
         if (!config.isSet("chat-tag-enabled")) {
             config.set("chat-tag-enabled", true);
+            changed = true;
+        }
+        if (!config.isSet("chat-filter.enabled")) {
+            config.set("chat-filter.enabled", true);
+            changed = true;
+        }
+        if (!config.isSet("chat-filter.drop-if-contains")) {
+            config.set("chat-filter.drop-if-contains", Arrays.asList("/setpaypal"));
+            changed = true;
+        }
+        if (!config.isSet("chat-filter.strip-substrings")) {
+            config.set("chat-filter.strip-substrings", Arrays.asList("(faction-kill)", "(faction-death)"));
             changed = true;
         }
         if (changed) {
@@ -128,6 +143,36 @@ public final class TagsConfig {
      */
     public boolean isChatTagEnabled() {
         return config.getBoolean("chat-tag-enabled", true);
+    }
+
+    /**
+     * Si false, desactive completement le filtre de tchat sortant (voir
+     * {@link com.belarion.factions.filter.OutgoingChatFilter}).
+     */
+    public boolean isChatFilterEnabled() {
+        return config.getBoolean("chat-filter.enabled", true);
+    }
+
+    /**
+     * Toute ligne de tchat SORTANTE (envoyee par le serveur au client, quelle que soit son
+     * origine : SaberFactions, un autre plugin, ou ce plugin) contenant une de ces chaines
+     * (recherche insensible a la casse) n'est jamais envoyee au joueur. Utile pour supprimer un
+     * message entier, par exemple un rappel "/setpaypal".
+     */
+    public List<String> getChatFilterDropIfContains() {
+        List<String> list = config.getStringList("chat-filter.drop-if-contains");
+        return list == null ? new ArrayList<>() : list;
+    }
+
+    /**
+     * Ces chaines sont retirees du texte des lignes de tchat sortantes qui les contiennent, en
+     * conservant le reste de la ligne (contrairement a {@link #getChatFilterDropIfContains()} qui
+     * supprime la ligne entiere). Utile pour un texte au milieu d'une ligne plus longue, par
+     * exemple un placeholder de statistiques non desire.
+     */
+    public List<String> getChatFilterStripSubstrings() {
+        List<String> list = config.getStringList("chat-filter.strip-substrings");
+        return list == null ? new ArrayList<>() : list;
     }
 }
 
