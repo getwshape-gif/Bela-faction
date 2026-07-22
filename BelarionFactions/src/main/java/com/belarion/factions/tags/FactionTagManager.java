@@ -2,14 +2,13 @@ package com.belarion.factions.tags;
 
 import com.belarion.factions.config.TagsConfig;
 import com.belarion.factions.integration.SaberFactionsHook;
-import com.belarion.factions.util.ColorUtil;
+import com.belarion.factions.util.FactionDisplayUtil;
 import com.belarion.factions.util.ReflectionCompat;
 import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.ProtocolLibrary;
 import com.comphenix.protocol.ProtocolManager;
 import com.comphenix.protocol.events.PacketContainer;
 import com.comphenix.protocol.wrappers.WrappedDataWatcher;
-import com.massivecraft.factions.struct.Relation;
 import org.bukkit.Location;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.EntityType;
@@ -123,14 +122,16 @@ public final class FactionTagManager {
 
         if (!config.isPerViewerColorsEnabled()) {
             // Mode degrade : une seule couleur pour tout le monde, sans ProtocolLib.
-            stand.setCustomName(ColorUtil.colorize(config.getOwnColor() + "[" + factionTag + "]"));
+            stand.setCustomName(FactionDisplayUtil.buildBracketedTag(
+                    config.getBracketColor(), config.getOwnColor(), factionTag));
             stand.setCustomNameVisible(true);
             return;
         }
 
         // Le nom "de base" (visible par defaut / pour les cas non couverts par le paquet
         // personnalise, ex: joueur sans faction qui regarde) reste sur une couleur neutre.
-        stand.setCustomName(ColorUtil.colorize(config.getNeutralColor() + "[" + factionTag + "]"));
+        stand.setCustomName(FactionDisplayUtil.buildBracketedTag(
+                config.getBracketColor(), config.getNeutralColor(), factionTag));
         stand.setCustomNameVisible(true);
 
         int distance = config.getDistance();
@@ -152,28 +153,8 @@ public final class FactionTagManager {
     }
 
     private String buildColoredTag(Player viewer, Player target, String factionTag) {
-        if (viewer.getUniqueId().equals(target.getUniqueId())) {
-            // Un joueur voit son propre tag avec sa propre couleur ("own-color").
-            return ColorUtil.colorize(config.getOwnColor() + "[" + factionTag + "]");
-        }
-
-        Relation relation = SaberFactionsHook.getRelation(viewer, target);
-        String colorCode;
-        if (relation == null) {
-            colorCode = config.getNeutralColor();
-        } else if (relation.isMember()) {
-            colorCode = config.getOwnColor();
-        } else if (relation.isEnemy()) {
-            colorCode = config.getEnemyColor();
-        } else if (relation.isAlly()) {
-            colorCode = config.getAllyColor();
-        } else if (relation.isTruce()) {
-            colorCode = config.getTruceColor();
-        } else {
-            colorCode = config.getNeutralColor();
-        }
-
-        return ColorUtil.colorize(colorCode + "[" + factionTag + "]");
+        String nameColor = FactionDisplayUtil.resolveRelationColor(config, viewer, target);
+        return FactionDisplayUtil.buildBracketedTag(config.getBracketColor(), nameColor, factionTag);
     }
 
     private ArmorStand getOrCreateStand(Player target) {

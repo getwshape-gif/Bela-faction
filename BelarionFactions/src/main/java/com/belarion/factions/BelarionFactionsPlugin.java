@@ -6,6 +6,7 @@ import com.belarion.factions.command.TopFactionsCommand;
 import com.belarion.factions.config.MainConfig;
 import com.belarion.factions.config.TagsConfig;
 import com.belarion.factions.listener.BlockedCommandListener;
+import com.belarion.factions.listener.FactionChatListener;
 import com.belarion.factions.listener.PlayerConnectionListener;
 import com.belarion.factions.points.BelarionPointsAPI;
 import com.belarion.factions.points.YamlFactionPointsProvider;
@@ -66,6 +67,7 @@ public final class BelarionFactionsPlugin extends JavaPlugin {
         PluginManager pluginManager = getServer().getPluginManager();
         pluginManager.registerEvents(new PlayerConnectionListener(tagManager), this);
         pluginManager.registerEvents(new BlockedCommandListener(mainConfig), this);
+        pluginManager.registerEvents(new FactionChatListener(mainConfig, tagsConfig), this);
 
         getCommand("topfactions").setExecutor(new TopFactionsCommand(mainConfig));
         getCommand("fpoints").setExecutor(new FPointsCommand(mainConfig));
