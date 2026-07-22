@@ -36,11 +36,9 @@
             <id>elmakers-repo</id>
             <url>https://maven.elmakers.com/repository/</url>
         </repository>
-        <!-- ProtocolLib : necessaire pour envoyer une couleur de nametag differente par joueur qui regarde -->
-        <repository>
-            <id>dmulloy2-repo</id>
-            <url>https://repo.dmulloy2.net/repository/public/</url>
-        </repository>
+        <!-- ProtocolLib est maintenant publie sur Maven Central (groupId net.dmulloy2) : l'ancien
+             depot repo.dmulloy2.net (com.comphenix.protocol) est officiellement deprecie par le
+             mainteneur, aucun repository supplementaire n'est donc necessaire ici. -->
     </repositories>
 
     <dependencies>
@@ -51,12 +49,12 @@
             <scope>provided</scope>
         </dependency>
 
-        <!-- Version 4.7.0 : derniere version documentee comme resolvable sur le depot public
-             dmulloy2, compatible avec l'API 1.8 (WrappedDataWatcher a index numerique). -->
+        <!-- ProtocolLib 5.4.0 (Maven Central, groupId net.dmulloy2) : ce build unique couvre
+             officiellement Minecraft 1.8 a 1.21.8, donc compatible avec ce serveur 1.8.8. -->
         <dependency>
-            <groupId>com.comphenix.protocol</groupId>
+            <groupId>net.dmulloy2</groupId>
             <artifactId>ProtocolLib</artifactId>
-            <version>4.7.0</version>
+            <version>5.4.0</version>
             <scope>provided</scope>
         </dependency>
 
