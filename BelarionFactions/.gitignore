@@ -1,4 +1,0 @@
-target/
-libs/*.jar
-!libs/.gitkeep
-
